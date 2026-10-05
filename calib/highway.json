@@ -1,0 +1,40 @@
+{
+  "note": "Fast lane of the right carriageway. Width 3.75 m (motorway lane); length = 6 periods of the lane divider dashes (6 m dash + 12 m gap = 18 m). Approximate: the dash standard is assumed, and speeds (trucks ~80, cars ~130 km/h) were used as a sanity check.",
+  "image_points": [
+    [
+      878,
+      616
+    ],
+    [
+      1089,
+      616
+    ],
+    [
+      767,
+      347
+    ],
+    [
+      684,
+      347
+    ]
+  ],
+  "world_points": [
+    [
+      0,
+      0
+    ],
+    [
+      3.75,
+      0
+    ],
+    [
+      3.75,
+      108
+    ],
+    [
+      0,
+      108
+    ]
+  ],
+  "max_range_m": 180
+}
