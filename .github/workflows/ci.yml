@@ -33,7 +33,8 @@ jobs:
       - name: Push to Space
         env:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
-          HF_SPACE: ${{ vars.HF_SPACE }}
+          HF_SPACE: ${{ vars.HF_SPACE || secrets.HF_SPACE }}
         run: |
+          [ -n "$HF_TOKEN" ] || { echo "::error::HF_TOKEN secret is empty"; exit 1; }
+          [ -n "$HF_SPACE" ] || { echo "::error::HF_SPACE variable is empty (e.g. user/traffic-trajectories)"; exit 1; }
           git lfs install
-          git push --force "https://user:${HF_TOKEN}@huggingface.co/spaces/${HF_SPACE}" HEAD:main
