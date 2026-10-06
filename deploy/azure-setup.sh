@@ -39,10 +39,14 @@ az containerapp create -g "$RG" -n "$APP" --environment "$ENV_NAME" \
 # GitHub Actions identity: federated credential for pushes to main, Contributor on the resource group only
 CLIENT_ID=$(az ad app create --display-name "$APP-github" --query appId -o tsv)
 az ad sp create --id "$CLIENT_ID" -o none
+# GitHub's OIDC subject carries numeric IDs: repo:owner@<owner_id>/name@<repo_id>:ref:refs/heads/main
+IDS=$(curl -fsS "https://api.github.com/repos/$REPO" | python3 -c "import json,sys; d=json.load(sys.stdin); print(d['owner']['id'], d['id'])")
+read -r OWNER_ID REPO_ID <<< "$IDS"
+SUBJECT="repo:${REPO%/*}@$OWNER_ID/${REPO#*/}@$REPO_ID:ref:refs/heads/main"
 az ad app federated-credential create --id "$CLIENT_ID" --parameters "{
   \"name\": \"github-main\",
   \"issuer\": \"https://token.actions.githubusercontent.com\",
-  \"subject\": \"repo:$REPO:ref:refs/heads/main\",
+  \"subject\": \"$SUBJECT\",
   \"audiences\": [\"api://AzureADTokenExchange\"]
 }" -o none
 RG_ID=$(az group show -n "$RG" --query id -o tsv)
