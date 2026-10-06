@@ -14,7 +14,12 @@ short_description: Video to metric road-user trajectories and speeds
 
 # Traffic Trajectory Extractor
 
+<<<<<<< HEAD
 **Live demo:** https://traffic-trajectories.politedune-edd82718.germanywestcentral.azurecontainerapps.io/
+=======
+**Live demo:** [Azure](https://traffic-trajectories.politedune-edd82718.germanywestcentral.azurecontainerapps.io) (first load after idle takes ~30–60 s) ·
+[Hugging Face Space](https://huggingface.co/spaces/AsadNizami/traffic-trajectories)
+>>>>>>> 03ffbc2 (update readme)
 
 Turns a traffic video into a **trajectory dataset**: every road user is detected, tracked over time,
 projected onto the road plane in meters, and given a smoothed velocity. The output is the kind of data
@@ -84,18 +89,36 @@ Calibration file format:
 ## Deployment
 
 GitHub Actions ([.github/workflows/ci.yml](.github/workflows/ci.yml)) runs `ruff` and `pytest` on every push. Pushes to
-`main` that pass are then mirrored to the Hugging Face Space, which rebuilds the Gradio app on free CPU hardware.
+`main` that pass are then deployed to both targets:
 
-### Azure
+- **Hugging Face Space** (`deploy` job): the repo is mirrored to the Space, which rebuilds the Gradio app on free CPU hardware.
+- **Azure Container Apps** (`deploy-azure` job): the [Dockerfile](Dockerfile) image is built, pushed to Azure Container Registry
+  and rolled out to the Container App (2 vCPU / 4 GiB, scales to zero when idle). CI signs in to Azure with GitHub OIDC,
+  so no Azure secret is stored in the repo.
 
-The app runs as an Azure Container App (2 vCPU / 4 GiB) and scales to zero when idle. One-time setup, with the az CLI logged in and docker running:
+### Azure setup (one time)
+
+With the az CLI logged in (`az login`) and docker running:
 
 ```bash
-./deploy/azure-setup.sh          # override names with RG=..., LOCATION=..., ACR=..., APP=...
+./deploy/azure-setup.sh          # override with RG=..., LOCATION=..., ACR=..., APP=..., REPO=owner/name
 ```
 
-It prints the app URL and the `gh variable set ...` commands to run. After those are set, every push to `main` that passes the tests
-builds the image, pushes it to ACR and rolls the app ([ci.yml](.github/workflows/ci.yml), `deploy-azure` job).
+It creates the resource group, registry, Container Apps environment and app, plus an Entra app with a federated credential
+for pushes to `main` and Contributor on the resource group. At the end it prints the app URL and six values to add as
+**repository variables** (Settings → Secrets and variables → Actions → *Variables*, not Secrets):
+`AZURE_CLIENT_ID`, `AZURE_TENANT_ID`, `AZURE_SUBSCRIPTION_ID`, `AZURE_RG`, `AZURE_ACR`, `AZURE_APP`.
+The `deploy-azure` job is skipped until they are set.
+
+Notes:
+- `LOCATION` defaults to `germanywestcentral`. Azure for Students subscriptions only allow a few regions; list them with
+  `az policy assignment list --query "[].parameters.listOfAllowedLocations.value"`.
+- The app pulls from the registry with its admin credentials, because express Container Apps environments don't support
+  managed-identity pulls.
+- GitHub's OIDC subject includes numeric IDs (`repo:owner@<id>/name@<id>:ref:refs/heads/main`); the script looks them up.
+  A login error `AADSTS700213` means the federated credential's subject doesn't match.
+
+To run the image locally: `docker build -t traj . && docker run -p 7860:7860 traj`.
 
 ## Credits
 
