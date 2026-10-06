@@ -48,7 +48,6 @@ with gr.Blocks(title="Traffic Trajectory Extractor") as demo:
         "homography, and estimate trajectories and speeds in **meters** and **km/h**. "
         "The sample clip and calibration are preloaded, so just press **Extract trajectories**. "
         "[Source code](https://github.com/AsadNizami/traffic-trajectories) · "
-        "runs on a free CPU, so expect about a minute."
     )
     with gr.Row():
         with gr.Column():

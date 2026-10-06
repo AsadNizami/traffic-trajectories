@@ -86,6 +86,17 @@ Calibration file format:
 GitHub Actions ([.github/workflows/ci.yml](.github/workflows/ci.yml)) runs `ruff` and `pytest` on every push. Pushes to
 `main` that pass are then mirrored to the Hugging Face Space, which rebuilds the Gradio app on free CPU hardware.
 
+### Azure
+
+The app runs as an Azure Container App (2 vCPU / 4 GiB) and scales to zero when idle. One-time setup, with the az CLI logged in and docker running:
+
+```bash
+./deploy/azure-setup.sh          # override names with RG=..., LOCATION=..., ACR=..., APP=...
+```
+
+It prints the app URL and the `gh variable set ...` commands to run. After those are set, every push to `main` that passes the tests
+builds the image, pushes it to ACR and rolls the app ([ci.yml](.github/workflows/ci.yml), `deploy-azure` job).
+
 ## Credits
 
 Sample video: `vehicles.mp4` from the [supervision](https://github.com/roboflow/supervision) assets (trimmed and downscaled).

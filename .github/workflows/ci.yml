@@ -39,3 +39,31 @@ jobs:
           [ -n "$HF_SPACE" ] || { echo "::error::HF_SPACE variable is empty (e.g. user/traffic-trajectories)"; exit 1; }
           git lfs install
           git push --force "https://user:${HF_TOKEN}@huggingface.co/spaces/${HF_SPACE}" HEAD:main
+
+  deploy-azure:
+    # Build the image, push it to ACR and roll the Azure Container App once tests pass on main.
+    # One-time setup: deploy/azure-setup.sh, which prints the repo variables to set. Skipped until they exist.
+    needs: test
+    if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request' && vars.AZURE_CLIENT_ID != ''
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          lfs: true
+      - uses: azure/login@v2
+        with:
+          client-id: ${{ vars.AZURE_CLIENT_ID }}
+          tenant-id: ${{ vars.AZURE_TENANT_ID }}
+          subscription-id: ${{ vars.AZURE_SUBSCRIPTION_ID }}
+      - name: Build, push and deploy
+        env:
+          IMAGE: ${{ vars.AZURE_ACR }}.azurecr.io/${{ vars.AZURE_APP }}:${{ github.sha }}
+        run: |
+          az extension add --name containerapp --upgrade -y
+          az acr login -n "${{ vars.AZURE_ACR }}"
+          docker build -t "$IMAGE" .
+          docker push "$IMAGE"
+          az containerapp update -g "${{ vars.AZURE_RG }}" -n "${{ vars.AZURE_APP }}" --image "$IMAGE"
