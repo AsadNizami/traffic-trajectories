@@ -14,12 +14,7 @@ short_description: Video to metric road-user trajectories and speeds
 
 # Traffic Trajectory Extractor
 
-<<<<<<< HEAD
 **Live demo:** https://traffic-trajectories.politedune-edd82718.germanywestcentral.azurecontainerapps.io/
-=======
-**Live demo:** [Azure](https://traffic-trajectories.politedune-edd82718.germanywestcentral.azurecontainerapps.io) (first load after idle takes ~30–60 s) ·
-[Hugging Face Space](https://huggingface.co/spaces/AsadNizami/traffic-trajectories)
->>>>>>> 03ffbc2 (update readme)
 
 Turns a traffic video into a **trajectory dataset**: every road user is detected, tracked over time,
 projected onto the road plane in meters, and given a smoothed velocity. The output is the kind of data
